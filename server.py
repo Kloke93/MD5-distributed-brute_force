@@ -23,6 +23,8 @@ class AdminCracker:
     port = 16180
     listen_size = 8
     max_buffer = 64
+    working_domain = (0, (10**10)-1)            # later padding strings to work just with 10 digits
+    block_size = 2 * (10 ** 5)                  # how long will be each block
 
     def __init__(self, md5_hash: str):
         """
@@ -32,6 +34,23 @@ class AdminCracker:
         self.md5_hash = md5_hash
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.setblocking(False)
+        self.blocks = self.working_block(AdminCracker.block_size)
+
+    @staticmethod
+    def working_block(block_size: int) -> str:
+        """
+        generator that returns the necessary working block
+        :param block_size: difference between where the block starts and finishes
+        :return: next working block
+        """
+        now = 0
+        post = block_size
+        while post < AdminCracker.working_domain[1]:
+            yield f"block from {str(now).zfill(10)} to {str(post).zfill(10)}"
+            now = post
+            post += block_size
+        yield f"block from {str(now).zfill(10)} to {str(AdminCracker.working_domain[1])}"
+        logging.debug('last working block')
 
     def run_server(self):
         """
