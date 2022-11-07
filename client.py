@@ -6,6 +6,7 @@ Description:
 import socket
 import threading
 import hashlib
+import logging
 
 
 class Client:
