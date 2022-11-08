@@ -7,12 +7,43 @@ import sys
 import socket
 import select
 import logging
+from time import time
 
 
 log_file = "md5server.log"          # file to save the log
 log_level = logging.DEBUG           # set the minimum logger level
 log_format = "%(asctime)s - %(levelname)s - %(message)s"   # logging format
 logging.basicConfig(filename=log_file, level=log_level, format=log_format)
+
+
+class Client:
+    """
+    Client information so server administrates special cases
+    """
+    max_time_interval = 90      # one minute and a half is the max interval between last connection and current time
+
+    def __init__(self, address, soc):
+        """
+        Initializes client information class
+        """
+        self.address = address
+        self.socket = soc
+        self.blocks = []                # blocks that client is working with
+        self.last_time = time()
+
+    def add_block(self, block: int):
+        """
+        Adds block to 'blocks' list
+        :param block: last number in the block
+        """
+        self.blocks.append(block)
+
+    def is_alive(self) -> bool:
+        """
+        Checks how much time passed since the last time it communicated
+        :return: returns if
+        """
+        return (time() - self.last_time) <= Client.max_time_interval
 
 
 class AdminCracker:
@@ -37,7 +68,7 @@ class AdminCracker:
         self.blocks = self.working_block(AdminCracker.block_size)
 
     @staticmethod
-    def working_block(block_size: int) -> str:
+    def working_block(block_size: int):
         """
         generator that returns the necessary working block
         :param block_size: difference between where the block starts and finishes
