@@ -10,31 +10,31 @@ import logging
 from time import time
 
 
-log_file = "md5server.log"          # file to save the log
-log_level = logging.DEBUG           # set the minimum logger level
-log_format = "%(asctime)s - %(levelname)s - %(message)s"   # logging format
+log_file = "md5server.log"      # file to save the log
+log_level = logging.DEBUG       # set the minimum logger level
+log_format = "%(asctime)s - %(levelname)s - %(message)s"    # logging format
 logging.basicConfig(filename=log_file, level=log_level, format=log_format)
 
 
 class Client:
     """
-    Client information so server administrates special cases
+    Client information that server needs
     """
     max_time_interval = 90      # one minute and a half is the max interval between last connection and current time
 
-    def __init__(self, address, soc):
+    def __init__(self, address):
         """
         Initializes client information class
+        :param address: contains address of client
         """
         self.address = address
-        self.socket = soc
         self.blocks = []                # blocks that client is working with
         self.last_time = time()
 
-    def add_block(self, block: int):
+    def add_block(self, block: str):
         """
         Adds block to 'blocks' list
-        :param block: last number in the block
+        :param block: block according to protocol
         """
         self.blocks.append(block)
 
@@ -56,6 +56,7 @@ class AdminCracker:
     max_buffer = 64
     working_domain = (0, (10**10)-1)            # later padding strings to work just with 10 digits
     block_size = 2 * (10 ** 5)                  # how long will be each block
+    original_len = 10                        # we suppose that length of the original string is 10
 
     def __init__(self, md5_hash: str):
         """
@@ -65,7 +66,10 @@ class AdminCracker:
         self.md5_hash = md5_hash
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.setblocking(False)
-        self.blocks = self.working_block(AdminCracker.block_size)
+        self.blocks = self.working_block(AdminCracker.block_size)       # blocks to work with
+        self.client_dict = {}
+        self.open_sockets = [self.server_socket]
+        self.messages = []                                              # messages to send list (ip, data)
 
     @staticmethod
     def working_block(block_size: int):
@@ -77,11 +81,47 @@ class AdminCracker:
         now = 0
         post = block_size
         while post < AdminCracker.working_domain[1]:
-            yield f"block from {str(now).zfill(10)} to {str(post).zfill(10)}"
+            yield f"BLK {str(now).zfill(AdminCracker.original_len)} to {str(post).zfill(AdminCracker.original_len)}"
             now = post
             post += block_size
-        yield f"block from {str(now).zfill(10)} to {str(AdminCracker.working_domain[1])}"
+        yield f"BLK {str(now).zfill(AdminCracker.original_len)} to {str(AdminCracker.working_domain[1])}"
         logging.debug('last working block')
+
+    @staticmethod
+    def validate_data(data: str) -> bool:
+        """
+        Validates input from server according to protocol
+        :param data: data to check its validity
+        """
+        if (data[:3] == "ASK") and (data[4:].isdigit()):
+            return True
+        elif (data[:3] == "SOL") and len(data[4:]) == AdminCracker.original_len:
+            return True
+        return False
+
+    def handle_communication(self, skt, data):
+        """
+        Handles communication with server
+        :param skt: socket of the client that send the message
+        :param data: data to handle
+        """
+        if data[:3] == "ASK":
+            client_count = int(data[4:-7])     # according to client number of cpus a different size block will be sent
+            client = self.client_dict[skt]
+            for _ in range(client_count):
+                block = next(self.blocks)
+                client.add_block(block)
+            start = client.blocks[0][:-10]
+            end = client.blocks[-1][-10:]
+            msg = start + end
+            self.messages.append((skt, msg))
+        elif data == "SOL":
+            for i in range(len(self.open_sockets)-1):
+                self.messages.append((self.open_sockets[1+i], "GOT"))
+            logging.info(f'Solution: {data[4:]}')
+        elif data == "":                # empty message indicates disconnection
+            self.open_sockets.remove(skt)
+            skt.close()
 
     def run_server(self):
         """
@@ -90,36 +130,37 @@ class AdminCracker:
         try:
             self.server_socket.bind((AdminCracker.ip, AdminCracker.port))
             self.server_socket.listen(AdminCracker.listen_size)
-            open_sockets = [self.server_socket]
+            original_found = False
 
-            while self.server_socket in open_sockets:
-                rlist, wlist, xlist = select.select(open_sockets, open_sockets, open_sockets)
+            while not original_found:
+                rlist, wlist, xlist = select.select(self.open_sockets,
+                                                    self.open_sockets[1:], self.open_sockets[1:])
                 # exceptions
                 for s in xlist:
                     logging.error(f"There is an exception in socket: {s}")
-                    open_sockets.remove(s)
+                    self.open_sockets.remove(s)
                 # to read
                 for s in rlist:
                     if s is self.server_socket:
                         client_socket, client_address = s.accept()
                         logging.debug(f"{client_address} is now connected")
-                        open_sockets.append(client_socket)
+                        new_client = Client(client_address)
+                        self.client_dict[client_socket] = new_client
+                        self.open_sockets.append(client_socket)
                     else:
                         data = s.recv(AdminCracker.max_buffer).decode()
-                        if data == "":
-                            open_sockets.remove(s)
-                            s.close()
-                        data_list = data.split()
-                        if data[0] == "solution":
-                            pass
+                        if self.validate_data(data):
+                            self.handle_communication(s, data)
                 # to write
-                for s in wlist:
-                    pass
-
+                for msg in self.messages:
+                    s, data = msg
+                    if s in wlist:
+                        s.send(data.encode())
         except socket.error as err:
             logging.critical(f'there was an error in line {sys.exc_info()[2].tb_lineno}: {err}')
         finally:
-            self.server_socket.close()
+            for skt in self.open_sockets:
+                skt.close()
 
 
 def main():
