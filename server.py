@@ -97,6 +97,8 @@ class AdminCracker:
             return True
         elif (data[:3] == "SOL") and len(data[4:]) == AdminCracker.original_len:
             return True
+        elif data == "":
+            return True
         return False
 
     def handle_communication(self, skt, data):
@@ -106,7 +108,7 @@ class AdminCracker:
         :param data: data to handle
         """
         if data[:3] == "ASK":
-            client_count = int(data[4:-7])     # according to client number of cpus a different size block will be sent
+            client_count = int(data[4:])     # according to client number of cpus a different size block will be sent
             client = self.client_dict[skt]
             for _ in range(client_count):
                 block = next(self.blocks)
@@ -115,9 +117,10 @@ class AdminCracker:
             end = client.blocks[-1][-10:]
             msg = start + end
             self.messages.append((skt, msg))
-        elif data == "SOL":
+        elif data[:3] == "SOL":
+            print(data[4:])
             for i in range(len(self.open_sockets)-1):
-                self.messages.append((self.open_sockets[1+i], "GOT"))
+                self.messages.append((self.open_sockets[1+i], "GOT*"))
             logging.info(f'Solution: {data[4:]}')
         elif data == "":                # empty message indicates disconnection
             self.open_sockets.remove(skt)
@@ -147,15 +150,23 @@ class AdminCracker:
                         new_client = Client(client_address)
                         self.client_dict[client_socket] = new_client
                         self.open_sockets.append(client_socket)
+                        self.messages.append((client_socket, f"AIM {self.md5_hash}"))
                     else:
                         data = s.recv(AdminCracker.max_buffer).decode()
-                        if self.validate_data(data):
-                            self.handle_communication(s, data)
+                        if len(data.split('*')) > 1:
+                            for msg in data.split('*')[:-1]:
+                                if self.validate_data(msg):
+                                    self.handle_communication(s, msg)
+                        else:
+                            if self.validate_data(data):
+                                self.handle_communication(s, data)
                 # to write
                 for msg in self.messages:
                     s, data = msg
                     if s in wlist:
-                        s.send(data.encode())
+                        print(data)
+                        s.send((data + '*').encode())
+                        self.messages.remove(msg)
         except socket.error as err:
             logging.critical(f'there was an error in line {sys.exc_info()[2].tb_lineno}: {err}')
         finally:
@@ -168,8 +179,8 @@ def main():
     run the program
     """
     # s = AdminCracker(input('insert an MD5 string: '))
-    # s.run_server()
-    pass
+    s = AdminCracker("91a27995ebca746f1813d31e4fd096f6")
+    s.run_server()
 
 
 if __name__ == "__main__":

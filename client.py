@@ -33,7 +33,7 @@ class Client:
         self.blocks = []                                # all blocks (start, end) to compute
         # Sockets
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)         # creates socket instance
-        self.client.settimeout(60)                                              # in case server fell
+        self.client.settimeout(30)                                              # in case server fell
         # Threads
         self.threads = []  # list that contains all threads (one per logical core in this program)
 
@@ -43,7 +43,7 @@ class Client:
         :param block: tuple with starting int and an int endpoint
         """
         for i in range(block[0], block[1] + 1):
-            if hashlib.md5(str(i).zfill(self.original_length)).hexdigest() == self.target:
+            if hashlib.md5(str(i).zfill(self.original_length).encode()).hexdigest() == self.target:
                 self.original = str(i).zfill(self.original_length)
                 self.found = True
                 break                               # original string found, no need to keep looping
@@ -74,6 +74,8 @@ class Client:
             return True
         elif data[:3] == "GOT":
             return True
+        elif data == "":
+            return True
         return False
 
     def get_blocks(self, chunk):
@@ -100,11 +102,15 @@ class Client:
             self.get_blocks(data[4:])
             self.thread_work()
             if self.found:
-                self.client.send(f"SOL {self.original}".encode())
+                self.client.send(f"SOL {self.original}*".encode())
+            else:
+                self.client.send(f"ASK {os.cpu_count()}*".encode())
         elif instruc == "AIM":
             self.target = data[4:]
         elif instruc == "GOT":
             self.found = True
+        elif data == "":
+            self.client.close()
 
     def run(self):
         """
@@ -114,11 +120,17 @@ class Client:
         """
         try:
             self.client.connect(self.server_address)
+            self.client.send(f"ASK {os.cpu_count()}*".encode())
             while not self.found:
                 msg = self.client.recv(Client.max_buffer).decode()
-                if not self.validate_data(msg):
-                    continue
-                self.handle_communication(msg)
+                print(msg)
+                if len(msg.split('*')) > 1:
+                    for ms in msg.split('*')[:-1]:
+                        if self.validate_data(ms):
+                            self.handle_communication(ms)
+                else:
+                    if self.validate_data(msg):
+                        self.handle_communication(msg)
         except socket.error as err:
             logging.error(err)
         finally:
@@ -134,4 +146,10 @@ def main():
 
 
 if __name__ == "__main__":
+    # c = Client()
+    # c.target = '639fc2398fd45606ada087e30168287b'
+    # c.get_blocks('0000000000 to 0002400000')
+    # c.thread_work()
+    # if c.found:
+    #     print('a')
     main()
