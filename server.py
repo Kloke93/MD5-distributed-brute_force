@@ -106,21 +106,29 @@ class AdminCracker:
     def handle_recovered(self, n: int, c: Client) -> str:
         """
         Sends to client some recovered blocks. If there aren't enough blocks we will send less
+        There is a '.' at the end of every block sequence
         :param n: how many blocks does the client need
         :param c: new client to handle blocks
         :return: returns message with blocks to send
         """
-        count = len(self.recovered_blocks)
+        count = 0
+        print(self.recovered_blocks)
+        for x in self.recovered_blocks:
+            if x == '.':
+                break
+            else:
+                count += 1
         if count > n:
             for _ in range(n):
                 block = self.recovered_blocks[0]
                 c.add_block(block)
                 self.recovered_blocks.pop(0)
         else:
-            for i in range(count):
+            for _ in range(count):
                 block = self.recovered_blocks[0]
                 c.add_block(block)
                 self.recovered_blocks.pop(0)
+            self.recovered_blocks.pop(0)
         start = c.blocks[0][:-10]
         end = c.blocks[-1][-10:]
         msg = start + end
@@ -156,7 +164,7 @@ class AdminCracker:
             self.open_sockets.remove(skt)
             c = self.client_dict[skt]
             logging.warning(f"{c.address} disconnected and left some blocks")
-            self.recovered_blocks += c.blocks
+            self.recovered_blocks += (c.blocks + ['.'])
             self.client_dict.pop(skt)
             skt.close()
 
@@ -197,7 +205,7 @@ class AdminCracker:
                 for s in self.open_sockets[1:]:
                     c = self.client_dict[s]
                     if not c.is_alive():
-                        self.recovered_blocks += c.blocks
+                        self.recovered_blocks += (c.blocks + ['.'])
                         logging.warning(f"{c.address} disconnected and left some blocks")
                         self.client_dict.pop(s)
                         self.open_sockets.remove(s)
