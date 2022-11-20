@@ -156,10 +156,10 @@ if __name__ == "__main__":
     c = Client()
     assert c.validate_data('AIM 639fc2398fd45606ada087e30168287b')
     c.target = '639fc2398fd45606ada087e30168287b'
-    assert not c.validate_data('AIM 639fc2398fd45606ada087e30168287b')
     c.get_blocks('0000000000 to 0002400000')
     c.thread_work()
-    assert c.found
+    assert c.original
+    assert not c.validate_data('AIM 639fc2398fd45606ada087e30168287b')
     assert c.validate_data("BLK 0000000000 to 0000100000")
     assert c.validate_data("GOT")
     assert c.validate_data("")
