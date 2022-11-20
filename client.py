@@ -12,6 +12,12 @@ from sys import argv
 import os
 
 
+log_file = "md5client.log"      # file to save the log
+log_level = logging.DEBUG       # set the minimum logger level
+log_format = "%(asctime)s - %(levelname)s - %(message)s"    # logging format
+logging.basicConfig(filename=log_file, level=log_level, format=log_format)
+
+
 class Client:
     """
     Client to handle
@@ -29,6 +35,7 @@ class Client:
         self.target = ""                                # target encoded string (given by server)
         self.original = ""                              # the original string found in computer (may not get this)
         self.found = False                              # if original is found (by server of by ourselves)
+        self.got = False
         self.original_length = 10                       # we suppose that length of the original string is 10
         self.blocks = []                                # all blocks (start, end) to compute
         # Sockets
@@ -45,7 +52,7 @@ class Client:
         for i in range(block[0], block[1] + 1):
             if hashlib.md5(str(i).zfill(self.original_length).encode()).hexdigest() == self.target:
                 self.original = str(i).zfill(self.original_length)
-                self.found = True
+                logging.debug(f'original string found. {self.original}')
                 break                               # original string found, no need to keep looping
 
     def thread_work(self):
@@ -101,7 +108,7 @@ class Client:
         if instruc == "BLK":
             self.get_blocks(data[4:])
             self.thread_work()
-            if self.found:
+            if self.original:
                 self.client.send(f"SOL {self.original}*".encode())
             else:
                 self.client.send(f"ASK {os.cpu_count()}*".encode())
@@ -129,10 +136,11 @@ class Client:
                         if self.validate_data(ms):
                             self.handle_communication(ms)
                 else:
+                    logging.warning("message doesn't contain '*'")
                     if self.validate_data(msg):
                         self.handle_communication(msg)
         except socket.error as err:
-            logging.error(err)
+            logging.critical(f'there was an error in line {sys.exc_info()[2].tb_lineno}: {err}')
         finally:
             self.client.close()
 

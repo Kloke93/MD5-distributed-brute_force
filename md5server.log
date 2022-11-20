@@ -1,47 +1,8 @@
-2022-11-19 17:40:43,722 - DEBUG - ('127.0.0.1', 59294) is now connected
-2022-11-19 17:46:25,370 - DEBUG - ('127.0.0.1', 59314) is now connected
-2022-11-19 17:51:25,844 - DEBUG - ('127.0.0.1', 59413) is now connected
-2022-11-19 17:51:30,024 - CRITICAL - there was an error in line 161: [WinError 10054] An existing connection was forcibly closed by the remote host
-2022-11-19 17:59:30,765 - DEBUG - ('127.0.0.1', 59656) is now connected
-2022-11-19 18:08:09,910 - DEBUG - ('127.0.0.1', 59749) is now connected
-2022-11-19 18:21:09,691 - DEBUG - ('127.0.0.1', 59940) is now connected
-2022-11-19 18:22:37,780 - DEBUG - ('127.0.0.1', 59960) is now connected
-2022-11-19 18:33:58,748 - DEBUG - ('127.0.0.1', 60170) is now connected
-2022-11-19 18:36:58,711 - DEBUG - ('127.0.0.1', 60245) is now connected
-2022-11-19 18:39:46,566 - DEBUG - ('127.0.0.1', 60322) is now connected
-2022-11-19 19:38:43,359 - DEBUG - ('127.0.0.1', 61098) is now connected
-2022-11-19 21:08:05,661 - DEBUG - ('127.0.0.1', 62511) is now connected
-2022-11-19 21:08:08,392 - INFO - Solution: 0000000002
-2022-11-19 21:08:08,392 - CRITICAL - there was an error in line 155: [WinError 10053] An established connection was aborted by the software in your host machine
-2022-11-19 21:08:45,683 - DEBUG - ('127.0.0.1', 62517) is now connected
-2022-11-19 22:06:08,648 - DEBUG - ('127.0.0.1', 63134) is now connected
-2022-11-19 22:06:08,648 - CRITICAL - there was an error in line 164: [WinError 10038] An operation was attempted on something that is not a socket
-2022-11-19 22:06:57,051 - DEBUG - ('127.0.0.1', 63136) is now connected
-2022-11-19 22:06:57,051 - CRITICAL - there was an error in line 164: [WinError 10038] An operation was attempted on something that is not a socket
-2022-11-19 22:07:07,842 - DEBUG - ('127.0.0.1', 63137) is now connected
-2022-11-19 22:07:07,842 - CRITICAL - there was an error in line 164: [WinError 10038] An operation was attempted on something that is not a socket
-2022-11-19 22:08:37,809 - DEBUG - ('127.0.0.1', 63142) is now connected
-2022-11-19 22:08:37,809 - CRITICAL - there was an error in line 165: [WinError 10038] An operation was attempted on something that is not a socket
-2022-11-19 22:10:34,536 - DEBUG - ('127.0.0.1', 63148) is now connected
-2022-11-19 22:10:34,536 - CRITICAL - there was an error in line 165: [WinError 10038] An operation was attempted on something that is not a socket
-2022-11-19 22:11:54,264 - DEBUG - ('127.0.0.1', 63161) is now connected
-2022-11-19 22:11:54,264 - CRITICAL - there was an error in line 165: [WinError 10038] An operation was attempted on something that is not a socket
-2022-11-19 22:13:11,982 - DEBUG - ('127.0.0.1', 63175) is now connected
-2022-11-19 22:13:11,982 - CRITICAL - there was an error in line 166: [WinError 10038] An operation was attempted on something that is not a socket
-2022-11-19 22:14:45,292 - DEBUG - ('127.0.0.1', 63197) is now connected
-2022-11-19 22:14:45,292 - CRITICAL - there was an error in line 165: [WinError 10038] An operation was attempted on something that is not a socket
-2022-11-19 22:16:38,246 - DEBUG - ('127.0.0.1', 63206) is now connected
-2022-11-19 22:16:38,246 - CRITICAL - there was an error in line 165: [WinError 10038] An operation was attempted on something that is not a socket
-2022-11-19 22:20:30,121 - DEBUG - ('127.0.0.1', 63210) is now connected
-2022-11-19 22:20:30,121 - CRITICAL - there was an error in line 165: [WinError 10038] An operation was attempted on something that is not a socket
-2022-11-19 22:47:00,544 - DEBUG - ('127.0.0.1', 63346) is now connected
-2022-11-19 22:51:29,766 - DEBUG - ('127.0.0.1', 63372) is now connected
-2022-11-19 23:06:23,214 - DEBUG - ('127.0.0.1', 63528) is now connected
-2022-11-19 23:08:21,315 - DEBUG - ('127.0.0.1', 63533) is now connected
-2022-11-19 23:12:08,767 - DEBUG - ('127.0.0.1', 63550) is now connected
-2022-11-19 23:12:53,772 - DEBUG - ('127.0.0.1', 63558) is now connected
-2022-11-19 23:12:56,504 - INFO - Solution: 0000000002
-2022-11-19 23:12:56,504 - CRITICAL - there was an error in line 155: [WinError 10053] An established connection was aborted by the software in your host machine
-2022-11-19 23:14:26,886 - DEBUG - ('127.0.0.1', 63580) is now connected
-2022-11-19 23:16:36,569 - INFO - Solution: 0020000000
-2022-11-19 23:16:36,569 - CRITICAL - there was an error in line 155: [WinError 10053] An established connection was aborted by the software in your host machine
+2022-11-20 23:25:18,201 - DEBUG - ('127.0.0.1', 55721) is now connected
+2022-11-20 23:25:25,316 - DEBUG - ('127.0.0.1', 55722) is now connected
+2022-11-20 23:27:43,832 - DEBUG - ('127.0.0.1', 55732) is now connected
+2022-11-20 23:27:52,189 - DEBUG - ('127.0.0.1', 55733) is now connected
+2022-11-20 23:28:03,225 - DEBUG - ('127.0.0.1', 55734) is now connected
+2022-11-20 23:29:27,540 - DEBUG - ('127.0.0.1', 55739) is now connected
+2022-11-20 23:29:44,774 - DEBUG - ('127.0.0.1', 55740) is now connected
+2022-11-20 23:29:54,054 - DEBUG - ('127.0.0.1', 55741) is now connected

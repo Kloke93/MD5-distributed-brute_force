@@ -20,7 +20,7 @@ class Client:
     """
     Client information that server needs
     """
-    max_time_interval = 90      # one minute and a half is the max interval between last connection and current time
+    max_time_interval = 15      # one minute and a half is the max interval between last connection and current time
 
     def __init__(self, address):
         """
@@ -55,7 +55,7 @@ class AdminCracker:
     listen_size = 8
     max_buffer = 64
     working_domain = (0, (10**10)-1)            # later padding strings to work just with 10 digits
-    block_size = 2 * (10 ** 5)                  # how long will be each block
+    block_size = (10 ** 5)                   # how long will be each block
     original_len = 10                        # we suppose that length of the original string is 10
 
     def __init__(self, md5_hash: str):
@@ -70,6 +70,8 @@ class AdminCracker:
         self.client_dict = {}
         self.open_sockets = [self.server_socket]
         self.messages = []                                              # messages to send list (ip, data)
+        self.found = False
+        self.recovered_blocks = []
 
     @staticmethod
     def working_block(block_size: int):
@@ -101,6 +103,29 @@ class AdminCracker:
             return True
         return False
 
+    def handle_recovered(self, n: int, c: Client) -> str:
+        """
+        Sends to client some recovered blocks. If there aren't enough blocks we will send less
+        :param n: how many blocks does the client need
+        :param c: new client to handle blocks
+        :return: returns message with blocks to send
+        """
+        count = len(self.recovered_blocks)
+        if count > n:
+            for _ in range(n):
+                block = self.recovered_blocks[0]
+                c.add_block(block)
+                self.recovered_blocks.pop(0)
+        else:
+            for i in range(count):
+                block = self.recovered_blocks[0]
+                c.add_block(block)
+                self.recovered_blocks.pop(0)
+        start = c.blocks[0][:-10]
+        end = c.blocks[-1][-10:]
+        msg = start + end
+        return msg
+
     def handle_communication(self, skt, data):
         """
         Handles communication with server
@@ -110,20 +135,28 @@ class AdminCracker:
         if data[:3] == "ASK":
             client_count = int(data[4:])     # according to client number of cpus a different size block will be sent
             client = self.client_dict[skt]
-            for _ in range(client_count):
-                block = next(self.blocks)
-                client.add_block(block)
-            start = client.blocks[0][:-10]
-            end = client.blocks[-1][-10:]
-            msg = start + end
+            client.blocks.clear()
+            if not self.recovered_blocks:
+                for _ in range(client_count):
+                    block = next(self.blocks)
+                    client.add_block(block)
+                start = client.blocks[0][:-10]
+                end = client.blocks[-1][-10:]
+                msg = start + end
+            else:
+                msg = self.handle_recovered(client_count, client)
             self.messages.append((skt, msg))
         elif data[:3] == "SOL":
             print(data[4:])
             for i in range(len(self.open_sockets)-1):
-                self.messages.append((self.open_sockets[1+i], "GOT*"))
+                self.messages.append((self.open_sockets[1+i], "GOT"))
+            self.found = True
             logging.info(f'Solution: {data[4:]}')
         elif data == "":                # empty message indicates disconnection
             self.open_sockets.remove(skt)
+            c = self.client_dict[skt]
+            self.recovered_blocks += c.blocks
+            self.client_dict.pop(skt)
             skt.close()
 
     def run_server(self):
@@ -133,9 +166,7 @@ class AdminCracker:
         try:
             self.server_socket.bind((AdminCracker.ip, AdminCracker.port))
             self.server_socket.listen(AdminCracker.listen_size)
-            original_found = False
-
-            while not original_found:
+            while not self.found:
                 rlist, wlist, xlist = select.select(self.open_sockets,
                                                     self.open_sockets[1:], self.open_sockets[1:])
                 # exceptions
@@ -153,6 +184,7 @@ class AdminCracker:
                         self.messages.append((client_socket, f"AIM {self.md5_hash}"))
                     else:
                         data = s.recv(AdminCracker.max_buffer).decode()
+                        self.client_dict[s].last_time = time()
                         if len(data.split('*')) > 1:
                             for msg in data.split('*')[:-1]:
                                 if self.validate_data(msg):
@@ -160,11 +192,17 @@ class AdminCracker:
                         else:
                             if self.validate_data(data):
                                 self.handle_communication(s, data)
+                # check if alive:
+                for s in self.open_sockets[1:]:
+                    c = self.client_dict[s]
+                    if not c.is_alive():
+                        self.recovered_blocks += c.blocks
+                        self.client_dict.pop(s)
+                        self.open_sockets.remove(s)
                 # to write
                 for msg in self.messages:
                     s, data = msg
                     if s in wlist:
-                        print(data)
                         s.send((data + '*').encode())
                         self.messages.remove(msg)
         except socket.error as err:
@@ -178,9 +216,11 @@ def main():
     """
     run the program
     """
+    start = time()
     # s = AdminCracker(input('insert an MD5 string: '))
-    s = AdminCracker("91a27995ebca746f1813d31e4fd096f6")
+    s = AdminCracker("fa4cb46a1c95a043da885463f5589862")
     s.run_server()
+    print(time() - start)
 
 
 if __name__ == "__main__":
