@@ -155,6 +155,7 @@ class AdminCracker:
         elif data == "":                # empty message indicates disconnection
             self.open_sockets.remove(skt)
             c = self.client_dict[skt]
+            logging.warning(f"{c.address} disconnected and left some blocks")
             self.recovered_blocks += c.blocks
             self.client_dict.pop(skt)
             skt.close()
@@ -197,6 +198,7 @@ class AdminCracker:
                     c = self.client_dict[s]
                     if not c.is_alive():
                         self.recovered_blocks += c.blocks
+                        logging.warning(f"{c.address} disconnected and left some blocks")
                         self.client_dict.pop(s)
                         self.open_sockets.remove(s)
                 # to write
@@ -217,11 +219,16 @@ def main():
     run the program
     """
     start = time()
-    # s = AdminCracker(input('insert an MD5 string: '))
-    s = AdminCracker("fa4cb46a1c95a043da885463f5589862")
+    s = AdminCracker(input('insert an MD5 string: '))
     s.run_server()
     print(time() - start)
 
 
 if __name__ == "__main__":
+    soc = AdminCracker('world-cup')   # not md5
+    assert soc.validate_data("ASK 12")
+    assert soc.validate_data("SOL ARGENTINAA")
+    assert soc.validate_data("")
+    assert not soc.validate_data("Champion")
+    assert next(soc.blocks) == "BLK 0000000000 to 0000100000"
     main()

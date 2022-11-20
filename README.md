@@ -1,4 +1,10 @@
-Instructions:
+Instruction:
+
+Turn on server, give it a MD5 hash and then 
+connect clients by giving as an argument
+in the terminal the server ip.
+
+Protocol description:
 - Delimiting messages with * in the end.
 
 - Server:

@@ -130,7 +130,6 @@ class Client:
             self.client.send(f"ASK {os.cpu_count()}*".encode())
             while not self.found:
                 msg = self.client.recv(Client.max_buffer).decode()
-                print(msg)
                 if len(msg.split('*')) > 1:
                     for ms in msg.split('*')[:-1]:
                         if self.validate_data(ms):
@@ -154,10 +153,14 @@ def main():
 
 
 if __name__ == "__main__":
-    # c = Client()
-    # c.target = '639fc2398fd45606ada087e30168287b'
-    # c.get_blocks('0000000000 to 0002400000')
-    # c.thread_work()
-    # if c.found:
-    #     print('a')
+    c = Client()
+    assert c.validate_data('AIM 639fc2398fd45606ada087e30168287b')
+    c.target = '639fc2398fd45606ada087e30168287b'
+    assert not c.validate_data('AIM 639fc2398fd45606ada087e30168287b')
+    c.get_blocks('0000000000 to 0002400000')
+    c.thread_work()
+    assert c.found
+    assert c.validate_data("BLK 0000000000 to 0000100000")
+    assert c.validate_data("GOT")
+    assert c.validate_data("")
     main()
