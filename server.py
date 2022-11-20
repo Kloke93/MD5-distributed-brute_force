@@ -112,7 +112,6 @@ class AdminCracker:
         :return: returns message with blocks to send
         """
         count = 0
-        print(self.recovered_blocks)
         for x in self.recovered_blocks:
             if x == '.':
                 break
@@ -226,10 +225,8 @@ def main():
     """
     run the program
     """
-    start = time()
     s = AdminCracker(input('insert an MD5 string: '))
     s.run_server()
-    print(time() - start)
 
 
 if __name__ == "__main__":
